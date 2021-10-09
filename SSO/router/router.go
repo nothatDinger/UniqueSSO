@@ -3,25 +3,33 @@ package router
 import (
 	"github.com/UniqueStudio/UniqueSSO/controller"
 	"github.com/UniqueStudio/UniqueSSO/middleware"
+	"github.com/gin-contrib/sessions"
 
 	"github.com/gin-gonic/gin"
 )
 
 func InitRouter(r *gin.Engine) {
+	// global middleware
 	r.Use(middleware.TracingMiddleware())
 	r.Use(middleware.Cors())
 	r.Use(gin.Recovery())
 	r.Use(gin.Logger())
 
-	// CAS related
-	sr := r.Group("/cas")
-	sr.POST("/login", controller.Login)
-	sr.POST("/logout", controller.Logout)
-	sr.GET("/p3/serviceValidate", controller.ValidateTicket)
+	// traefik validate
+	r.GET("/gateway/validate/traefik", controller.TraefikAuthValidate)
 
+	// sms
 	smsrouter := r.Group("/sms")
 	smsrouter.POST("code", controller.SendSmsCode)
 
-	qrrouter := r.Group("/qrcode")
-	qrrouter.GET("code", controller.GetWorkWxQRCode)
+	// normal login
+	router := r.Group("")
+	router.Use(sessions.Sessions("UserSystem", middleware.RedisSessionStore))
+	router.Use(middleware.SessionRedirect())
+	router.POST("/login", controller.Login)
+	router.POST("/logout", controller.Logout)
+
+	// oauth login
+	oauth := r.Group("/login/oauth")
+	oauth.GET("/lark", controller.LarkOauthCallbackHandler)
 }

@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"github.com/UniqueStudio/UniqueSSO/common"
-	"github.com/UniqueStudio/UniqueSSO/database"
+	"github.com/UniqueStudio/UniqueSSO/pb/sso"
 )
 
 type CommonResponse struct {
@@ -15,10 +15,10 @@ type serviceRespnse struct {
 }
 
 type authenticationSuccess struct {
-	RedirectService *string        `json:"redirectService,omitempty"`
-	UserId          *string        `json:"user,omitempty"`
-	QrcodeSrc       *string        `json:"qrcodeSrc,omitempty"`
-	Attributes      *database.User `json:"attributes,omitempty"`
+	RedirectService *string   `json:"redirectService,omitempty"`
+	UserId          *string   `json:"user,omitempty"`
+	QrcodeSrc       *string   `json:"qrcodeSrc,omitempty"`
+	Attributes      *sso.User `json:"attributes,omitempty"`
 }
 
 type authenticationFailure struct {
@@ -75,7 +75,7 @@ func InternalError(err error) *CommonResponse {
 	}
 }
 
-func AuthSuccess(userInfo *database.User) *CommonResponse {
+func AuthSuccess(userInfo *sso.User) *CommonResponse {
 	return &CommonResponse{
 		ServiceResponse: serviceRespnse{
 			AuthenticationSuccess: &authenticationSuccess{

@@ -4,6 +4,8 @@ application:
   mode: debug # debug / prod
   read_timeout: 5
   write_timeout: 5
+  session_secret: 
+  session_domain: 
   allow_service:
     - ".*hustunique.com.*"
 
@@ -11,18 +13,16 @@ database:
   postgres_dsn: host= user= password= dbname= port= sslmode= TimeZone=Asia/Shanghai
 
 redis:
-  addr: 
-  password: 
-  db: 
+  addr:
+  password:
+  db:
 
 sms:
-  secret_id: 
-  secret_key: 
-  app_id: 
+  secret_id:
+  secret_key:
+  app_id:
 
-work_wx:
-  app_id: 
-  agent_id: 
-  redirect_uri: 
-  corpid: 
-  corpsecret:
+lark:
+  app_id:
+  app_secret:
+  redirect_uri:

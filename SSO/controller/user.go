@@ -4,9 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-	"time"
+
 	"github.com/UniqueStudio/UniqueSSO/common"
-	"github.com/UniqueStudio/UniqueSSO/conf"
 	"github.com/UniqueStudio/UniqueSSO/pkg"
 	"github.com/UniqueStudio/UniqueSSO/service"
 	"github.com/UniqueStudio/UniqueSSO/util"
@@ -60,7 +59,6 @@ func Login(ctx *gin.Context) {
 	}
 	if redirectUrl, ok := ctx.GetQuery("service"); ok && redirectUrl != "" {
 		if service.VerifyService(redirectUrl) != nil {
-
 			ctx.JSON(http.StatusUnauthorized, pkg.InvalidService(errors.New("unsupported service: "+redirectUrl)))
 			return
 		}
@@ -71,6 +69,13 @@ func Login(ctx *gin.Context) {
 			return
 		}
 		target = ru
+	}
+
+	// judge oauth type first
+	switch signType {
+	case common.SignTypeLark:
+		ctx.Redirect(http.StatusFound, service.GeneateLarkRedirectUrl(target.String()))
+		return
 	}
 
 	data := new(pkg.LoginUser)
@@ -88,27 +93,7 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	// new ticket, store and set cookie
-	tgt := util.NewTGT()
-	if err := service.StoreValue(ctx.Request.Context(), tgt, user.UID, common.CAS_TGT_EXPIRES); err != nil {
-		zapx.WithContext(apmCtx).Error("store tgt failed", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, pkg.InternalError(errors.New("服务器错误，请稍后尝试")))
-		return
-	}
-	ctx.SetCookie(common.CAS_COOKIE_NAME, tgt, int(common.CAS_TGT_EXPIRES/time.Second), "/", ctx.Request.Host, true, true)
-
-	ticket := util.NewTicket()
-	if err := service.StoreValue(ctx.Request.Context(), ticket, user.UID, common.CAS_TICKET_EXPIRES); err != nil {
-		zapx.WithContext(apmCtx).Error("store ticket failed", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, pkg.InternalError(errors.New("服务器错误，请稍后尝试")))
-		return
-	}
-
-	query := target.Query()
-	query.Set("ticket", ticket)
-	target.RawQuery = query.Encode()
-
-	// append token
+	// issue session
 
 	ctx.Redirect(http.StatusFound, target.String())
 }
@@ -116,22 +101,4 @@ func Login(ctx *gin.Context) {
 // TODO: construct a watcher to implement logout function
 func Logout(ctx *gin.Context) {
 
-}
-
-func GetWorkWxQRCode(ctx *gin.Context) {
-	apmCtx, span := util.Tracer.Start(ctx.Request.Context(), "GetWorkWxQRCode")
-	defer span.End()
-	if conf.SSOConf.Application.Mode == "debug" {
-		src := "https://open.work.weixin.qq.com/wwopen/sso/qrImg?key=2d2287cf9cc95a8"
-		ctx.JSON(http.StatusOK, pkg.QrcodeSuccess(src))
-		return
-	}
-
-	src, err := util.GetQRCodeSrc()
-	if err != nil {
-		zapx.WithContext(apmCtx).Error("get work wxQRCode failed", zap.Error(err))
-		ctx.JSON(http.StatusInternalServerError, pkg.InternalError(errors.New("获取二维码错误")))
-		return
-	}
-	ctx.JSON(http.StatusOK, pkg.QrcodeSuccess(src))
 }

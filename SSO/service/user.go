@@ -3,10 +3,8 @@ package service
 import (
 	"context"
 	"errors"
-	"net/url"
 
 	"github.com/UniqueStudio/UniqueSSO/common"
-	"github.com/UniqueStudio/UniqueSSO/conf"
 	"github.com/UniqueStudio/UniqueSSO/database"
 	"github.com/UniqueStudio/UniqueSSO/pkg"
 	"github.com/UniqueStudio/UniqueSSO/util"
@@ -22,8 +20,6 @@ func VerifyUser(ctx context.Context, login *pkg.LoginUser, signType string) (*da
 		return VerifyUserByPhone(login.Phone, login.Password)
 	case common.SignTypePhoneSms:
 		return VerifyUserBySMS(ctx, login.Phone, login.Code)
-	case common.SignTypeWechat:
-		return VerifyUserByQrcode(login.QrcodeSrc)
 	default:
 		return nil, errors.New("Invalid sign type")
 	}
@@ -75,32 +71,6 @@ func VerifyUserBySMS(ctx context.Context, phone, sms string) (*database.User, er
 		return nil, errors.New("sms code is wrong")
 	}
 	err = database.DB.Table((user.TableName())).Where("phone = ?", phone).Scan(user).Error
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
-func VerifyUserByQrcode(qrcode string) (*database.User, error) {
-	src, err := url.Parse(qrcode)
-	if err != nil {
-		return nil, err
-	}
-	code, err := util.FetchAuthCode(src.Query().Get("key"))
-	if err != nil {
-		return nil, err
-	}
-
-	conf.SSOConf.WorkWx.AccessToken.RWLock.RLock()
-	token := conf.SSOConf.WorkWx.AccessToken.Token
-	conf.SSOConf.WorkWx.AccessToken.RWLock.RUnlock()
-	userid, err := util.FetchWorkwxUserId(token, code)
-	if err != nil {
-		return nil, err
-	}
-
-	user := new(database.User)
-	err = database.DB.Table(user.TableName()).Where("workwx_user_id = ?", userid).Scan(user).Error
 	if err != nil {
 		return nil, err
 	}

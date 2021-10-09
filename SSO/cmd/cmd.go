@@ -7,11 +7,12 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
 	"github.com/UniqueStudio/UniqueSSO/common"
 	"github.com/UniqueStudio/UniqueSSO/conf"
 	"github.com/UniqueStudio/UniqueSSO/database"
+	"github.com/UniqueStudio/UniqueSSO/middleware"
 	"github.com/UniqueStudio/UniqueSSO/router"
-	"github.com/UniqueStudio/UniqueSSO/service"
 	"github.com/UniqueStudio/UniqueSSO/util"
 
 	"github.com/gin-gonic/gin"
@@ -67,7 +68,9 @@ func setup() {
 		os.Exit(1)
 	}
 
-	service.SetupAccessToken()
+	if err := middleware.SetupMiddleware(); err != nil {
+		os.Exit(1)
+	}
 }
 
 func run() {

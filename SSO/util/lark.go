@@ -1,0 +1,82 @@
+package util
+
+const (
+	LarkWebFmt    = "https://open.larksuite.com/open-apis/auth/v3/app_access_token/internal"                  //获取app_token的网址
+	LarkStateFmt  = "https://open.larksuite.com/open-apis/authen/v1/index?redirect_uri=%s&app_id=%s&state=%s" //获取auth_code的网址
+	LarkUserIdFmt = "https://open.larksuite.com/open-apis/authen/v1/access_token"                             //获取用户信息的网址
+)
+
+// //获取token并存入redis中
+// func GetLarkAppToken(appId, appSecret string) (string, error) {
+// 	fmt.Println("GetLarkAppToken:now GetLarkToken")
+// 	//注意要构建http请求
+// 	//构建一个
+// 	postBody := &TokenPostBody{AppId: appId, AppSecret: appSecret}
+// 	jsonByte, err := json.Marshal(postBody)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	req, err := http.NewRequest(http.MethodPost, LarkWebFmt, bytes.NewBuffer(jsonByte))
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	req.Header.Set("Content-Type", "application/json; charset=UTF-8") //设置header
+// 	client := &http.Client{}
+// 	response, err := client.Do(req)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	defer response.Body.Close()
+// 	body, _ := ioutil.ReadAll(response.Body)
+// 	var jsonResult JsonResult
+// 	json.Unmarshal(body, &jsonResult)
+// 	//token存入redis内
+// 	//todo
+// 	err = database.RedisClient.Set(context.Background(), "lark_token", jsonResult.AppAccessToken, jsonResult.Expire*time.Second).Err()
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return jsonResult.AppAccessToken, nil
+// }
+
+// //只返回open_id其他的可以从response_body里面去拿到
+
+// func FetchWorkLarkUserId(token, code string) (string, error) {
+// 	//接下里要构建http请求
+// 	log.Printf("function FetchWorkLarkUserId")
+// 	userIdPostBody := &UserIdPostBody{
+// 		Token:     token,
+// 		GrantType: "authorization_code",
+// 		Code:      code,
+// 	}
+
+// 	jsonByte, err := json.Marshal(userIdPostBody)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	req, err := http.NewRequest(http.MethodPost, LarkUserIdFmt, bytes.NewBuffer(jsonByte))
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	req.Header.Set("Content-Type", "application/json") //设置header
+// 	client := &http.Client{}
+// 	response, err := client.Do(req)
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	defer response.Body.Close()
+// 	body, _ := ioutil.ReadAll(response.Body)
+// 	fmt.Println(string(body))
+// 	var responseInfo ResponseInfo
+// 	err = json.Unmarshal(body, responseInfo)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	if responseInfo.UserInfo == nil {
+// 		return "", errors.New(responseInfo.Message)
+// 	} //出错的情况
+// 	return responseInfo.UserInfo.OpenId, nil //不能返回response.UserInfo.UserId 是中文
+// 	//返回值可以根据需求修改,详情见上面的结构体
+
+// }

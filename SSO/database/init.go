@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"time"
+
 	"github.com/UniqueStudio/UniqueSSO/conf"
 
 	"github.com/go-redis/redis/v8"
@@ -54,10 +55,10 @@ func initRedis(ctx context.Context) (*redis.Client, error) {
 }
 
 func InitTables() (err error) {
-	err = DB.AutoMigrate(&User{})
-	if err != nil {
-		zapx.Error("create table failed", zap.Error(err))
-		return err
-	}
+	// err = DB.AutoMigrate(&User{})
+	// if err != nil {
+	// 	zapx.Error("create table failed", zap.Error(err))
+	// 	return err
+	// }
 	return nil
 }

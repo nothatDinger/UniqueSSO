@@ -3,7 +3,6 @@ package conf
 import (
 	"net/url"
 	"regexp"
-	"sync"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
@@ -16,9 +15,9 @@ type Conf struct {
 	Database     DatabaseConf     `mapstructure:"database"`
 	Redis        RedisConf        `mapstructure:"redis"`
 	Sms          []SMSOptions     `mapstructure:"sms"`
-	WorkWx       WorkWxConf       `mapstructure:"work_wx"`
 	OpenPlatform OpenPlatformConf `mapstructure:"openplat_form"`
 	APM          APMConf          `mapstructure:"apm"`
+	Lark         LarkConf         `mapstructure:"lark"`
 }
 type ApplicationConf struct {
 	Host            string           `mapstructure:"host"`
@@ -27,6 +26,8 @@ type ApplicationConf struct {
 	Mode            string           `mapstructure:"mode"`
 	ReadTimeout     int              `mapstructure:"read_timeout"`
 	WriteTimeout    int              `mapstructure:"write_timeout"`
+	SessionSecret   string           `mapstructure:"session_secret"`
+	SessionDomain   string           `mapstructure:"session_domain"`
 	AllowService    []string         `mapstructure:"allow_service"`
 	AllowServiceReg []*regexp.Regexp `mapstructure:"-"`
 }
@@ -47,18 +48,6 @@ type SMSOptions struct {
 	SignName   string `mapstructure:"sign_name"`
 }
 
-type WorkWxConf struct {
-	AppId       string `mapstructure:"app_id"`
-	AgentId     string `mapstructure:"agent_id"`
-	RedirectUri string `mapstructure:"redirect_uri"`
-	CorpId      string `mapstructure:"corpid"`
-	CorpSecret  string `mapstructure:"corpsecret"`
-	AccessToken struct {
-		RWLock sync.RWMutex
-		Token  string
-	} `mapstructure:"-"`
-}
-
 type OpenPlatformConf struct {
 	GrpcAddr       string `mapstructure:"grpc_addr"`
 	GrpcCert       string `mapstructure:"grpc_cert"`
@@ -67,6 +56,12 @@ type OpenPlatformConf struct {
 
 type APMConf struct {
 	ReporterBackground string `mapstructure:"reporter_backend"`
+}
+
+type LarkConf struct {
+	AppId       string `mapstructure:"app_id"`
+	AppSecret   string `mapstructure:"app_secret"`
+	RedirectUri string `mapstructure:"redirect_uri"`
 }
 
 var (
@@ -102,7 +97,7 @@ func InitConf(confFilepath string) error {
 		zapx.Info("run mode", zap.String("mode", SSOConf.Application.Mode))
 	}
 
-	SSOConf.WorkWx.RedirectUri = url.PathEscape(SSOConf.WorkWx.RedirectUri)
+	SSOConf.Lark.RedirectUri = url.PathEscape(SSOConf.Lark.RedirectUri)
 
 	return nil
 }

@@ -1,33 +1,71 @@
 package model
 
 import (
+	"time"
+
+	"github.com/UniqueStudio/UniqueSSO/pb/lark"
 	"github.com/UniqueStudio/UniqueSSO/pb/sso"
+	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
-// Basic user infomation
-// type User struct {
-// 	CreateAt time.Time      `json:"-"`
-// 	UpdateAt time.Time      `json:"-"`
-// 	DeleteAt gorm.DeletedAt `json:"-"`
+type BasicUserInfo struct {
+	CreateAt time.Time      `json:"-"`
+	UpdateAt time.Time      `json:"-"`
+	DeleteAt gorm.DeletedAt `json:"-" gorm:"index"`
 
-// 	UID          string          `json:"uid" gorm:"column:uid;primaryKey"`
-// 	WorkwxUserId string          `json:"-" gorm:"column:workwx_user_id;index"`
-// 	Name         string          `json:"name" gorm:"column:name"`
-// 	Phone        string          `json:"phone" gorm:"column:phone;index"`
-// 	EMail        string          `json:"email" gorm:"column:email;index"`
-// 	Password     string          `json:"-" gorm:"column:password"`
-// 	Role         common.UserRole `json:"role" gorm:"column:role"`
-// }
-
-// func (u *User) TableName() string {
-// 	return "user"
-// }
-
-// TODO
-func GetUserById(uid string) *sso.User {
-	return nil
+	sso.User
 }
 
-func SaveUser(*sso.User) error {
-	return nil
+type UserGroup struct {
+	CreateAt time.Time      `json:"-"`
+	UpdateAt time.Time      `json:"-"`
+	DeleteAt gorm.DeletedAt `json:"-" gorm:"index"`
+
+	UserID string        `gorm:"column:uid;primaryKey"`
+	Groups pq.Int64Array `gorm:"type:integer[]"`
+}
+
+type UserPermission struct {
+	gorm.Model
+	UserID string `gorm:"column:uid"`
+	sso.Permission
+}
+
+type LarkExternalInfo struct {
+	CreateAt time.Time      `json:"-"`
+	UpdateAt time.Time      `json:"-"`
+	DeleteAt gorm.DeletedAt `json:"-" gorm:"index"`
+
+	sso.ExternalInfo
+	lark.LarkUserInfo
+}
+
+type UserExternalInfo struct {
+	CreateAt time.Time      `json:"-"`
+	UpdateAt time.Time      `json:"-"`
+	DeleteAt gorm.DeletedAt `json:"-" gorm:"index"`
+
+	UserID      string         `gorm:"column:uid;primaryKey"`
+	ExternalIDs pq.StringArray `gorm:"column:eids;type:text[]"`
+}
+
+func (BasicUserInfo) TableName() string {
+	return "user"
+}
+
+func (UserGroup) TableName() string {
+	return "user_groups"
+}
+
+func (UserPermission) TableName() string {
+	return "user_permissions"
+}
+
+func (LarkExternalInfo) TableName() string {
+	return "lark_external_info"
+}
+
+func (UserExternalInfo) TableName() string {
+	return "user_external_ids"
 }

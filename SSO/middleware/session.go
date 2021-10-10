@@ -13,7 +13,7 @@ func SessionRedirect() gin.HandlerFunc {
 		sess := sessions.Default(ctx)
 
 		service := ctx.Query("service")
-		_, ok := sess.Get(common.SESSION_NAME).(string)
+		_, ok := sess.Get(common.SESSION_NAME_UID).(string)
 
 		switch {
 		// login with redirect

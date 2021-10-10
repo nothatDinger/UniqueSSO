@@ -9,6 +9,7 @@ import (
 	"github.com/UniqueStudio/UniqueSSO/pkg"
 	"github.com/UniqueStudio/UniqueSSO/service"
 	"github.com/UniqueStudio/UniqueSSO/util"
+	"github.com/gin-contrib/sessions"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xylonx/zapx"
@@ -54,34 +55,19 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	target := &url.URL{
-		Path: "/",
-	}
-	if redirectUrl, ok := ctx.GetQuery("service"); ok && redirectUrl != "" {
-		if service.VerifyService(redirectUrl) != nil {
-			ctx.JSON(http.StatusUnauthorized, pkg.InvalidService(errors.New("unsupported service: "+redirectUrl)))
-			return
-		}
-		ru, err := url.Parse(redirectUrl)
-		if err != nil {
-			zapx.WithContext(apmCtx).Error("failed to parse redirect url", zap.String("service", redirectUrl))
-			ctx.JSON(http.StatusBadRequest, pkg.InvalidRequest(errors.New("service格式错误")))
-			return
-		}
-		target = ru
-	}
+	redirectURI := url.PathEscape(ctx.Query("service"))
 
 	// judge oauth type first
 	switch signType {
 	case common.SignTypeLark:
-		ctx.Redirect(http.StatusFound, service.GeneateLarkRedirectUrl(target.String()))
+		ctx.Redirect(http.StatusFound, service.GeneateLarkRedirectUrl(redirectURI))
 		return
 	}
 
 	data := new(pkg.LoginUser)
 	if err := ctx.ShouldBindJSON(data); err != nil {
 		zapx.WithContext(apmCtx).Error("post body format incorroct", zap.Error(err))
-		ctx.JSON(http.StatusBadRequest, pkg.InvalidRequest(errors.New("上传数据格式错误")))
+		ctx.JSON(http.StatusBadRequest, pkg.InvalidRequest(err))
 		return
 	}
 
@@ -94,11 +80,19 @@ func Login(ctx *gin.Context) {
 	}
 
 	// issue session
+	sess := sessions.Default(ctx)
+	sess.Set(common.SESSION_NAME_UID, user.UID)
+	sess.Save()
 
-	ctx.Redirect(http.StatusFound, target.String())
+	if redirectURI != "" {
+		ctx.Redirect(http.StatusFound, redirectURI)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, pkg.AuthSuccess(user))
 }
 
-// TODO: construct a watcher to implement logout function
 func Logout(ctx *gin.Context) {
-
+	sess := sessions.Default(ctx)
+	sess.Delete(common.SESSION_NAME_UID)
 }

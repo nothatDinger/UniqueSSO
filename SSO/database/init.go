@@ -47,18 +47,9 @@ func initRedis(ctx context.Context) (*redis.Client, error) {
 	})
 	pong, err := rclient.Ping(ctx).Result()
 	if err != nil {
-	zapx.Error("ping redis error", zap.Error(err))
+		zapx.Error("ping redis error", zap.Error(err))
 		return nil, err
 	}
 	zapx.Info("ping redis success", zap.String("result", pong))
 	return rclient, nil
-}
-
-func InitTables() (err error) {
-	// err = DB.AutoMigrate(&User{})
-	// if err != nil {
-	// 	zapx.Error("create table failed", zap.Error(err))
-	// 	return err
-	// }
-	return nil
 }

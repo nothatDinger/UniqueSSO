@@ -12,6 +12,7 @@ import (
 	"github.com/UniqueStudio/UniqueSSO/conf"
 	"github.com/UniqueStudio/UniqueSSO/database"
 	"github.com/UniqueStudio/UniqueSSO/middleware"
+	"github.com/UniqueStudio/UniqueSSO/model"
 	"github.com/UniqueStudio/UniqueSSO/router"
 	"github.com/UniqueStudio/UniqueSSO/util"
 
@@ -60,7 +61,7 @@ func setup() {
 		os.Exit(1)
 	}
 
-	if err := database.InitTables(); err != nil {
+	if err := model.InitTables(); err != nil {
 		os.Exit(1)
 	}
 

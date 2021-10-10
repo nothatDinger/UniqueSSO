@@ -2,7 +2,6 @@ package conf
 
 import (
 	"net/url"
-	"regexp"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
@@ -20,16 +19,14 @@ type Conf struct {
 	Lark         LarkConf         `mapstructure:"lark"`
 }
 type ApplicationConf struct {
-	Host            string           `mapstructure:"host"`
-	Port            string           `mapstructure:"port"`
-	Name            string           `mapstructure:"name"`
-	Mode            string           `mapstructure:"mode"`
-	ReadTimeout     int              `mapstructure:"read_timeout"`
-	WriteTimeout    int              `mapstructure:"write_timeout"`
-	SessionSecret   string           `mapstructure:"session_secret"`
-	SessionDomain   string           `mapstructure:"session_domain"`
-	AllowService    []string         `mapstructure:"allow_service"`
-	AllowServiceReg []*regexp.Regexp `mapstructure:"-"`
+	Host          string `mapstructure:"host"`
+	Port          string `mapstructure:"port"`
+	Name          string `mapstructure:"name"`
+	Mode          string `mapstructure:"mode"`
+	ReadTimeout   int    `mapstructure:"read_timeout"`
+	WriteTimeout  int    `mapstructure:"write_timeout"`
+	SessionSecret string `mapstructure:"session_secret"`
+	SessionDomain string `mapstructure:"session_domain"`
 }
 
 type DatabaseConf struct {
@@ -82,15 +79,6 @@ func InitConf(confFilepath string) error {
 	validate := validator.New()
 	if err := validate.Struct(SSOConf); err != nil {
 		return err
-	}
-
-	SSOConf.Application.AllowServiceReg = make([]*regexp.Regexp, len(SSOConf.Application.AllowService))
-	for i, service := range SSOConf.Application.AllowService {
-		reg, err := regexp.Compile(service)
-		if err != nil {
-			return err
-		}
-		SSOConf.Application.AllowServiceReg[i] = reg
 	}
 
 	if SSOConf.Application.Mode == "debug" {

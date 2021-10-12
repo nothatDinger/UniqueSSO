@@ -8,8 +8,8 @@ require (
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/go-redis/redis/v8 v8.11.3
-	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.1.2
+	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 	github.com/labstack/gommon v0.3.0
 	github.com/lib/pq v1.3.0
 	github.com/pquerna/otp v1.3.0
@@ -39,6 +39,7 @@ require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect

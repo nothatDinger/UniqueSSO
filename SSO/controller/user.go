@@ -16,34 +16,6 @@ import (
 	"go.uber.org/zap"
 )
 
-/*
-	query param:
-	type: phone / sms / email / wechat
-	service[option]
-
-	1. phone number with password
-    body:
-    {
-        "phone": "",
-        "password": ""
-		"totp_token": ""
-    }
-
-2. phone sms
-    body:
-    {
-        "phone": "",
-        "code": ""
-    }
-
-3. email address with password
-    body:
-    {
-        "email": "",
-        "password": ""
-    }
-*/
-
 func Login(ctx *gin.Context) {
 	apmCtx, span := util.Tracer.Start(ctx.Request.Context(), "Login")
 	defer span.End()
@@ -55,12 +27,18 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
+	// if no redirect specified, jump to the main page
 	redirectURI := url.PathEscape(ctx.Query("service"))
-
+	if redirectURI == "" {
+		redirectURI = (&url.URL{
+			Host: ctx.Request.Host,
+			Path: "/",
+		}).String()
+	}
 	// judge oauth type first
 	switch signType {
 	case common.SignTypeLark:
-		ctx.Redirect(http.StatusFound, service.GeneateLarkRedirectUrl(redirectURI))
+		ctx.Redirect(http.StatusFound, common.LARK_OAUTH_URL(redirectURI))
 		return
 	}
 
@@ -82,6 +60,7 @@ func Login(ctx *gin.Context) {
 	// issue session
 	sess := sessions.Default(ctx)
 	sess.Set(common.SESSION_NAME_UID, user.UID)
+	sess.Options(sessions.Options{MaxAge: common.SESSION_MAX_AGE})
 	sess.Save()
 
 	if redirectURI != "" {
@@ -94,5 +73,7 @@ func Login(ctx *gin.Context) {
 
 func Logout(ctx *gin.Context) {
 	sess := sessions.Default(ctx)
-	sess.Delete(common.SESSION_NAME_UID)
+	sess.Set(common.SESSION_NAME_UID, "")
+	sess.Options(sessions.Options{MaxAge: -1})
+	sess.Save()
 }

@@ -12,44 +12,33 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"github.com/xylonx/zapx"
-	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
-func GetBasicUserById(ctx context.Context, uid string) (*sso.User, error) {
-	apmCtx, span := util.Tracer.Start(ctx, "GetBasicUserById")
-	defer span.End()
+func GetUserIDByEid(ctx context.Context, eid string) (string, error) {
+	return getUserIDByEid(ctx, database.DB, eid)
+}
 
-	users := make([]model.BasicUserInfo, 0, 1)
-	tx := database.DB.Where(&model.BasicUserInfo{
-		User: sso.User{
-			UID: uid,
-		},
-	}).Find(&users)
-	if tx.RowsAffected == 0 {
-		err := tx.Error
-		if err == nil {
-			err = gorm.ErrRecordNotFound
-		}
-		span.RecordError(err)
-		zapx.WithContext(apmCtx).Error("get basic user by uid failed", zap.Error(err))
+func GetBasicUserById(ctx context.Context, uid string) (*sso.User, error) {
+	user, err := getBasicUserInfoById(ctx, database.DB, uid)
+	if err != nil {
 		return nil, err
 	}
-
-	return &users[0].User, nil
+	user.Password = ""
+	return &user.User, nil
 }
 
 func GetBasicUserByEmail(ctx context.Context, email string) (*sso.User, error) {
 	apmCtx, span := util.Tracer.Start(ctx, "GetBasicUserByEmail")
 	defer span.End()
 
-	users := make([]model.BasicUserInfo, 0, 1)
+	user := model.BasicUserInfo{}
 	tx := database.DB.Where(&model.BasicUserInfo{
 		User: sso.User{
 			Email: email,
 		},
-	}).Find(&users)
+	}).First(&user)
 	if tx.RowsAffected == 0 {
 		err := tx.Error
 		if err == nil {
@@ -60,19 +49,20 @@ func GetBasicUserByEmail(ctx context.Context, email string) (*sso.User, error) {
 		return nil, err
 	}
 
-	return &users[0].User, nil
+	user.Password = ""
+	return &user.User, nil
 }
 
 func GetBasicUserByPhone(ctx context.Context, phone string) (*sso.User, error) {
 	apmCtx, span := util.Tracer.Start(ctx, "GetBasicUserByPhone")
 	defer span.End()
 
-	users := make([]model.BasicUserInfo, 0, 1)
+	user := model.BasicUserInfo{}
 	tx := database.DB.Where(&model.BasicUserInfo{
 		User: sso.User{
 			Phone: phone,
 		},
-	}).Find(&users)
+	}).First(&user)
 	if tx.RowsAffected == 0 {
 		err := tx.Error
 		if err == nil {
@@ -83,7 +73,35 @@ func GetBasicUserByPhone(ctx context.Context, phone string) (*sso.User, error) {
 		return nil, err
 	}
 
-	return &users[0].User, nil
+	user.Password = ""
+	return &user.User, nil
+}
+
+func GetBasicUserByEID(ctx context.Context, eid string) (*sso.User, error) {
+	apmCtx, span := util.Tracer.Start(ctx, "GetBasicUserByEID")
+	defer span.End()
+
+	tx := database.DB.Begin()
+	uid, err := getUserIDByEid(ctx, tx, eid)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	user, err := getBasicUserInfoById(ctx, tx, uid)
+	if err != nil {
+		if err == nil {
+			err = gorm.ErrRecordNotFound
+		}
+		zapx.WithContext(apmCtx).Info("can't get basic user info by UID", zap.Error(err))
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
+
+	user.Password = ""
+	return &user.User, nil
 }
 
 func GetBasicUserWithGroupById(ctx context.Context, uid string) (*sso.User, error) {
@@ -91,12 +109,12 @@ func GetBasicUserWithGroupById(ctx context.Context, uid string) (*sso.User, erro
 	defer span.End()
 
 	tx := database.DB.Begin()
-	users := make([]model.BasicUserInfo, 0, 1)
+	user := model.BasicUserInfo{}
 	newTx := tx.Where(&model.BasicUserInfo{
 		User: sso.User{
 			UID: uid,
 		},
-	}).Find(&users)
+	}).First(&user)
 	if newTx.RowsAffected == 0 {
 		err := newTx.Error
 		if err == nil {
@@ -108,10 +126,10 @@ func GetBasicUserWithGroupById(ctx context.Context, uid string) (*sso.User, erro
 		return nil, err
 	}
 
-	groups := make([]model.UserGroup, 0, 1)
+	group := model.UserGroup{}
 	newTx = tx.Where(&model.UserGroup{
 		UserID: uid,
-	}).Find(&groups)
+	}).First(&group)
 	if newTx.RowsAffected == 0 {
 		err := newTx.Error
 		if err == nil {
@@ -125,15 +143,17 @@ func GetBasicUserWithGroupById(ctx context.Context, uid string) (*sso.User, erro
 
 	tx.Commit()
 
-	ssogroups := make([]sso.Group, len(groups[0].Groups))
+	ssogroups := make([]sso.Group, len(group.Groups))
 	for i := range ssogroups {
-		ssogroups[i] = sso.Group(groups[0].Groups[i])
+		ssogroups[i] = sso.Group(group.Groups[i])
 	}
-	users[0].Group = ssogroups
+	user.Group = ssogroups
 
-	return &users[0].User, nil
+	user.Password = ""
+	return &user.User, nil
 }
 
+// generate uid and totp secret while
 func SaveUser(ctx context.Context, user *sso.User) error {
 	apmCtx, span := util.Tracer.Start(ctx, "SaveUser")
 	defer span.End()
@@ -145,6 +165,14 @@ func SaveUser(ctx context.Context, user *sso.User) error {
 		return err
 	}
 	user.UID = uid.String()
+
+	totpSecret, err := util.GenerateTOTPSharedKey()
+	if err != nil {
+		span.RecordError(err)
+		zapx.WithContext(apmCtx).Error("generate totp shared key failed", zap.Error(err))
+		return err
+	}
+	user.TOTPSecret = totpSecret
 
 	// group table data
 	groups := make(pq.Int64Array, len(user.Group))
@@ -170,7 +198,7 @@ func SaveUser(ctx context.Context, user *sso.User) error {
 		eids[i] = user.ExternalInfos[i].EID
 		switch user.ExternalInfos[i].EName {
 		case common.EXTERNAL_NAME_LARK:
-			larkExtInfo, err := util.UnmarshalLarkExternalInfo(*user.ExternalInfos[i].Detail)
+			larkExtInfo, err := util.UnmarshalLarkExternalInfo(user.ExternalInfos[i].Detail)
 			if err != nil {
 				span.RecordError(err)
 				zapx.WithContext(apmCtx).Error("unmarshal larkExtInfo failed", zap.Error(err))
@@ -232,7 +260,8 @@ func SaveUser(ctx context.Context, user *sso.User) error {
 
 	// insert external information
 	for i := range extInfos {
-		newTx = tx.Create(i)
+		newTx := tx.Create(extInfos[i])
+		// newTx = tx.Table(extInfos[i].tableName).Create(i)
 		if newTx.RowsAffected == 0 {
 			err := newTx.Error
 			if err == nil {
@@ -264,27 +293,44 @@ func SaveUser(ctx context.Context, user *sso.User) error {
 	return nil
 }
 
-func IsPermissionExist(ctx context.Context, uid string, perm *sso.Permission) (bool, error) {
-	apmCtx, span := util.Tracer.Start(ctx, "IsPermissionExist")
+func getBasicUserInfoById(ctx context.Context, db *gorm.DB, uid string) (*model.BasicUserInfo, error) {
+	apmCtx, span := util.Tracer.Start(ctx, "GetBasicUserById")
 	defer span.End()
-	span.SetAttributes(attribute.Any("permission", perm))
 
-	perms := make([]model.UserPermission, 0, 1)
-	newTx := database.DB.Where(&model.UserPermission{
-		UserID:     uid,
-		Permission: *perm,
-	}).Find(&perm)
-	if newTx.Error != nil {
-		zapx.WithContext(apmCtx).Error("database failed", zap.Error(newTx.Error))
-		return false, newTx.Error
+	user := model.BasicUserInfo{}
+	tx := db.Where(&model.BasicUserInfo{
+		User: sso.User{
+			UID: uid,
+		},
+	}).First(&user)
+	if tx.RowsAffected == 0 {
+		err := tx.Error
+		if err == nil {
+			err = gorm.ErrRecordNotFound
+		}
+		span.RecordError(err)
+		zapx.WithContext(apmCtx).Error("get basic user by uid failed", zap.Error(err))
+		return nil, err
 	}
 
+	user.Password = ""
+	return &user, nil
+}
+
+func getUserIDByEid(ctx context.Context, db *gorm.DB, eid string) (string, error) {
+	apmCtx, span := util.Tracer.Start(ctx, "getUserIDByEID")
+	defer span.End()
+
+	userExtInfo := model.UserExternalInfo{}
+	newTx := db.Raw("SELECT * FROM user_external_ids WHERE ? = ANY (eids)", eid).Scan(&userExtInfo)
 	if newTx.RowsAffected == 0 {
-		zapx.WithContext(apmCtx).Info("no permission in database")
-		return false, nil
+		err := newTx.Error
+		if err == nil {
+			err = gorm.ErrRecordNotFound
+		}
+		zapx.WithContext(apmCtx).Info("can't get eid info", zap.Error(err))
+		return "", err
 	}
 
-	zapx.WithContext(apmCtx).Info("database record", zap.Any("permissions", perms))
-
-	return true, nil
+	return userExtInfo.UserID, nil
 }

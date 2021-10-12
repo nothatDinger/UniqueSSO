@@ -13,7 +13,18 @@ type LoginUser struct {
 	Password     string `json:"password,omitempty"`
 	TOTPPasscode string `json:"totp_token,omitempty"`
 	Code         string `json:"code,omitempty"`
-	QrcodeSrc    string `json:"qrcode_src"`
+}
+
+type LarkAppTokenReq struct {
+	AppId     string `json:"app_id"`
+	AppSecret string `json:"app_secret"`
+}
+
+type LarkAppTokenResp struct {
+	Code           int    `json:"code"`
+	Message        string `json:"msg"`
+	AppAccessToken string `json:"app_access_token"`
+	Expire         int    `json:"expire"`
 }
 
 type LarkTenantTokenReq struct {
@@ -41,5 +52,19 @@ type LarkCode2TokenResp struct {
 		TokenType   string `json:"token_type"`
 		ExpiresIn   int    `json:"expires_in"`
 		lark.LarkUserInfo
+	} `json:"data"`
+}
+
+type LarkGetUserInfoResp struct {
+	Code    int               `json:"code"`
+	Message string            `json:"msg"`
+	Data    lark.LarkUserInfo `json:"data"`
+}
+
+type LarkGetContactUserInfoResp struct {
+	Code    int    `json:"code"`
+	Message string `json:"msg"`
+	Data    struct {
+		User lark.LarkUserInfo `json:"user"`
 	} `json:"data"`
 }

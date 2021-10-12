@@ -17,7 +17,6 @@ type serviceRespnse struct {
 type authenticationSuccess struct {
 	RedirectService *string   `json:"redirectService,omitempty"`
 	UserId          *string   `json:"user,omitempty"`
-	QrcodeSrc       *string   `json:"qrcodeSrc,omitempty"`
 	Attributes      *sso.User `json:"attributes,omitempty"`
 }
 
@@ -92,17 +91,6 @@ func RedirectSuccess(service string) *CommonResponse {
 		ServiceResponse: serviceRespnse{
 			AuthenticationSuccess: &authenticationSuccess{
 				RedirectService: &service,
-			},
-			AuthenticationFailure: nil,
-		},
-	}
-}
-
-func QrcodeSuccess(imgsrc string) *CommonResponse {
-	return &CommonResponse{
-		ServiceResponse: serviceRespnse{
-			AuthenticationSuccess: &authenticationSuccess{
-				QrcodeSrc: &imgsrc,
 			},
 			AuthenticationFailure: nil,
 		},

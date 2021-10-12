@@ -1,28 +1,48 @@
 application:
   host: 0.0.0.0
-  Port: 5000
+  port: 5000
+  rpc_port: 50000
+  rpc_cert_file:
+  rpc_cert_key:
   mode: debug # debug / prod
   read_timeout: 5
   write_timeout: 5
   session_secret: 
   session_domain: 
-  allow_service:
-    - ".*hustunique.com.*"
+  traefik_redirect_uri: 
 
 database:
-  postgres_dsn: host= user= password= dbname= port= sslmode= TimeZone=Asia/Shanghai
+  postgres_dsn: host= user= password= dbname= port= sslmode=disable TimeZone=Asia/Shanghai
 
 redis:
-  addr:
-  password:
-  db:
+  addr: 
+  password: 
+  db: 0
 
 sms:
-  secret_id:
-  secret_key:
-  app_id:
+  - name: verificationCode
+    template_id: 
+    sign_name: 
+
+apm:
+  reporter_backend:
 
 lark:
   app_id:
-  app_secret:
+  app_secret: 
   redirect_uri:
+  lark_user_type:
+    intern: 
+    regular: 
+    graduated: 
+  group_id:
+    web: 
+    lab:
+    pm:
+    design:
+    android:
+    ios: 
+    ios_newbie: 
+    ios_old: 
+    game:
+    ai:

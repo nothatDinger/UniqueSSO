@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"context"
-	"fmt"
+	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,6 +16,11 @@ import (
 	"github.com/UniqueStudio/UniqueSSO/model"
 	"github.com/UniqueStudio/UniqueSSO/router"
 	"github.com/UniqueStudio/UniqueSSO/util"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
@@ -93,32 +99,92 @@ func run() {
 		os.Exit(1)
 	}
 
+	/*
+		Init HTTP server
+	*/
 	if conf.SSOConf.Application.Mode == common.DebugMode {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-
 	r := gin.New()
 	router.InitRouter(r)
 
-	addr := fmt.Sprintf("%s:%s",
-		conf.SSOConf.Application.Host,
-		conf.SSOConf.Application.Port)
+	httpAddr := conf.SSOConf.Application.Host + ":" + conf.SSOConf.Application.Port
 	srv := http.Server{
-		Addr:         addr,
+		Addr:         httpAddr,
 		Handler:      r,
 		ReadTimeout:  time.Second * time.Duration(conf.SSOConf.Application.ReadTimeout),
 		WriteTimeout: time.Second * time.Duration(conf.SSOConf.Application.WriteTimeout),
 	}
 
+	/*
+		INIT gRPC server
+	*/
+	grpcAddr := conf.SSOConf.Application.Host + ":" + conf.SSOConf.Application.RPCPort
+	lis, err := net.Listen("tcp", grpcAddr)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	s := new(grpc.Server)
+	if conf.SSOConf.Application.Mode == common.DebugMode {
+		creds, err := credentials.NewServerTLSFromFile(
+			conf.SSOConf.Application.RPCCertFile,
+			conf.SSOConf.Application.RPCKeyFile,
+		)
+		if err != nil {
+			zapx.Fatal("new server credentials failed", zap.Error(err))
+		}
+		s = grpc.NewServer(
+			grpc.Creds(creds),
+			grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+				grpc_recovery.StreamServerInterceptor(),
+				otelgrpc.StreamServerInterceptor(),
+			)),
+			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+				grpc_recovery.UnaryServerInterceptor(),
+				otelgrpc.UnaryServerInterceptor(),
+			)),
+		)
+	} else {
+		s = grpc.NewServer(
+			grpc.WithInsecure(),
+			grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+				grpc_recovery.StreamServerInterceptor(),
+				otelgrpc.StreamServerInterceptor(),
+			)),
+			grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+				grpc_recovery.UnaryServerInterceptor(),
+				otelgrpc.UnaryServerInterceptor(),
+			)),
+		)
+	}
+
+	router.InitRPC(s)
+
+	/*
+		Start HTTP server
+	*/
 	go func() {
-		zapx.Info("start http server", zap.String("host", addr))
+		zapx.Info("start http server", zap.String("host", httpAddr))
 		if err := srv.ListenAndServe(); err != nil {
 			zapx.Error("http run error", zap.Error(err))
 		}
 	}()
 
+	/*
+		Start gRPC server
+	*/
+	go func() {
+		zapx.Info("start grpc server", zap.String("host", grpcAddr))
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+	}()
+
+	/*
+		Graceful Shutdown
+	*/
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)
 	<-sig
@@ -126,8 +192,11 @@ func run() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
+	s.GracefulStop()
+
 	if err := srv.Shutdown(ctx); err != nil {
 		zapx.Error("shutdown http server failed", zap.Error(err))
 		os.Exit(1)
 	}
+
 }

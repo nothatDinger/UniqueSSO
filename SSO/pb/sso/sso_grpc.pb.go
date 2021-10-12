@@ -19,7 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SSOServiceClient interface {
 	HaveAccess(ctx context.Context, in *QueryAccessRequest, opts ...grpc.CallOption) (*QueryAccessResponse, error)
-	GetUserInfo(ctx context.Context, in *QueryUserInfoRequest, opts ...grpc.CallOption) (*User, error)
+	GetUserBasicInfo(ctx context.Context, in *QueryUserInfoRequest, opts ...grpc.CallOption) (*User, error)
 }
 
 type sSOServiceClient struct {
@@ -39,9 +39,9 @@ func (c *sSOServiceClient) HaveAccess(ctx context.Context, in *QueryAccessReques
 	return out, nil
 }
 
-func (c *sSOServiceClient) GetUserInfo(ctx context.Context, in *QueryUserInfoRequest, opts ...grpc.CallOption) (*User, error) {
+func (c *sSOServiceClient) GetUserBasicInfo(ctx context.Context, in *QueryUserInfoRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
-	err := c.cc.Invoke(ctx, "/sso.SSOService/GetUserInfo", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/sso.SSOService/GetUserBasicInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (c *sSOServiceClient) GetUserInfo(ctx context.Context, in *QueryUserInfoReq
 // for forward compatibility
 type SSOServiceServer interface {
 	HaveAccess(context.Context, *QueryAccessRequest) (*QueryAccessResponse, error)
-	GetUserInfo(context.Context, *QueryUserInfoRequest) (*User, error)
+	GetUserBasicInfo(context.Context, *QueryUserInfoRequest) (*User, error)
 	mustEmbedUnimplementedSSOServiceServer()
 }
 
@@ -64,8 +64,8 @@ type UnimplementedSSOServiceServer struct {
 func (UnimplementedSSOServiceServer) HaveAccess(context.Context, *QueryAccessRequest) (*QueryAccessResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HaveAccess not implemented")
 }
-func (UnimplementedSSOServiceServer) GetUserInfo(context.Context, *QueryUserInfoRequest) (*User, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfo not implemented")
+func (UnimplementedSSOServiceServer) GetUserBasicInfo(context.Context, *QueryUserInfoRequest) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserBasicInfo not implemented")
 }
 func (UnimplementedSSOServiceServer) mustEmbedUnimplementedSSOServiceServer() {}
 
@@ -98,20 +98,20 @@ func _SSOService_HaveAccess_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SSOService_GetUserInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SSOService_GetUserBasicInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryUserInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SSOServiceServer).GetUserInfo(ctx, in)
+		return srv.(SSOServiceServer).GetUserBasicInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/sso.SSOService/GetUserInfo",
+		FullMethod: "/sso.SSOService/GetUserBasicInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SSOServiceServer).GetUserInfo(ctx, req.(*QueryUserInfoRequest))
+		return srv.(SSOServiceServer).GetUserBasicInfo(ctx, req.(*QueryUserInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -128,8 +128,8 @@ var SSOService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SSOService_HaveAccess_Handler,
 		},
 		{
-			MethodName: "GetUserInfo",
-			Handler:    _SSOService_GetUserInfo_Handler,
+			MethodName: "GetUserBasicInfo",
+			Handler:    _SSOService_GetUserBasicInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

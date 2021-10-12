@@ -1,17 +1,59 @@
 # UniqueSSO
+
 > Single Sign On for UniqueStudio
 
 ## Diagram 
 
-The UniqueSSO is nearly a standard implementation of CAS.
+### normal login
 
-Below is the cas diagram.
+#### normal
 
-![CAS Diagram](https://apereo.github.io/cas/4.2.x/images/cas_flow_diagram.png)
+```sequence
+client --> sso: normal login 
+client ->> sso: post
+sso ->> sso: validate
+sso ->>  client: success / failure
+```
+
+#### with redirect
+
+```sequence
+client --> sso: login with redirect
+client ->> sso: post with service
+sso ->> sso: validate
+sso ->> client: 302(reidrect)
+```
+
+### third-party login
+
+#### failure
+
+```sequence
+client ->> traefik: "request"
+traefik ->> sso: ask for validate
+sso ->> sso: validate (by session)
+sso ->> traefik: 302(false)
+traefik ->> client: 302 redirect
+client ->> sso: /login
+```
+
+#### success
+
+```sequence
+client ->> traefik: request
+traefik ->> sso: ask for validate
+sso ->> sso: validate (by session)
+sso ->> traefik: 200(success) \n Append `X-UID` header
+traefik ->> app: request with `X-UID` header
+app -->> app: 
+app ->> traefik: resp
+traefik ->> traefik: delete some header
+traefik ->> client: resp
+```
+
 ## Big picture
 
-1. login at `POST /cas/login?service=${redirectURI}` with body 
-2. validate ticket at `GET /cas/p3/serviceValidate?ticket=${ticket}`
+1. login at `POST /v1/login?type=${loginType}&service=${redirectURI}` with body 
 
 for login, there are four ways to login:
 
@@ -21,23 +63,9 @@ for login, there are four ways to login:
 
 3. email address with password
 
-4. wechat oauth
+4. lark oauth
 
-store state in cookie, which persisted by redis.
-
-The user info is stored in PostgreSQL with database named `sso`, and the table name is `user`
-
-## How to access
-
-The UniqueSSO is nearly a standard implementation of CAS. This is the [cas link](https://apereo.github.io/cas/4.2.x/protocol/CAS-Protocol.html)
-
-1. Redirect to UniqueSSO login page `https://sso.hustuniuqe.com/cas/login` with service, which is the redirectURI from SSO.
-2. If user login successfully, the `UniqueSSO` will redirct the page to `service` specified in step 1 and with the ticket. Like this:
-   > `https://bbs.hustunique.com?ticket=${TICKET}`
-   
-   For most cases, the ticket will expire after 3 minutes. In addition, the ticket is just valid at the first time whether validate successfully or not.
-3. Validate ticket by sending HTTP GET request to `https://sso.hustuniuqe.com/cas/p3/serviceValidate?ticket=${ticket}&service=${service}`. If success, sso will return the user info
-   >  The service here is used to fiter not redirect.
+store state as session, which persisted by redis.
 
 ## Deployment
 

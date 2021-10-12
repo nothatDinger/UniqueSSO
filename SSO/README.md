@@ -6,8 +6,7 @@
 
     the redirect is done by the traefik gateway. So any request sent to the real service is an authenticated request. The SSO will insert 2 http header:
     
-    - `X-User-ID`: contains the user id
-    - `X-User-Token`: contains the user token used to maintain users' permission
+    - `X-ID`: contains the user id
 
 2. Permission control
 

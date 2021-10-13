@@ -3,6 +3,7 @@ version: "3.7"
 services:
     uniquesso-back:
         build: ./SSO
+        hostname: dev-sso-back
         volumes:
             - ./SSO/conf.yaml:/opt/uniquesso-backend/config/settings.yaml
         ports:

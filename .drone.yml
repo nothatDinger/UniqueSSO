@@ -41,7 +41,7 @@ steps:
         path: /drone/src/SSO/conf.yaml
     commands:
       - ls
-      - docker-compose up -d
+      - docker-compose up -d uniquesso-back
     when:
       branch:
         - dev
@@ -58,7 +58,7 @@ steps:
         path: /drone/src/SSO/conf.yaml
     commands:
       - ls
-      - docker-compose up -d
+      - docker-compose up -d uniquesso-back
     when:
       event:
         - tag

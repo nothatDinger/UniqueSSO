@@ -21,7 +21,7 @@ services:
         build: ./SSO
         container_name: dev-sso-back
         volumes:
-            - ./SSO/conf.yaml:/opt/uniquesso-backend/config/settings.yaml
+            - ./conf.yaml:/opt/uniquesso-backend/config/settings.yaml
         ports:
             - 6004:5000
         networks:

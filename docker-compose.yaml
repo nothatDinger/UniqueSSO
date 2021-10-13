@@ -11,15 +11,15 @@ services:
             - uniquesso
             - db_network
 
-    uniquesso-front:
-        build: ./dashboard
-        env_file:
-            - ./dashboard/.env
-        volumes:
-            - ./static/:/opt/uniquesso-dashboard/
-        networks:
-            - uniquesso
-            - db_network
+#     uniquesso-front:
+#         build: ./dashboard
+#         env_file:
+#             - ./dashboard/.env
+#         volumes:
+#             - ./static/:/opt/uniquesso-dashboard/
+#         networks:
+#             - uniquesso
+#             - db_network
 
 
 networks:

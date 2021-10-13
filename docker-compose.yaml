@@ -7,7 +7,7 @@ services:
         volumes:
             - ./SSO/conf.yaml:/opt/uniquesso-backend/config/settings.yaml
         ports:
-            - 5000:5000
+            - 6004:5000
         networks:
             - uniquesso
             - db_network

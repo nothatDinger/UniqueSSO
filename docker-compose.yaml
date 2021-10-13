@@ -28,4 +28,4 @@ networks:
         name: uniques
     db_network:
         external: true
-        name: db_network
+        name: database

@@ -21,10 +21,11 @@ services:
             - uniquesso
             - db_network
 
+
 networks:
     uniquesso:
         internal: true
-        name: uniquesso
+        name: uniques
     db_network:
         external: true
         name: db_network

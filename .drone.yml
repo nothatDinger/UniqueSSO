@@ -2,7 +2,6 @@ kind: pipeline
 type: docker
 name: SSO
 
-
 clone:
   disable: true
 

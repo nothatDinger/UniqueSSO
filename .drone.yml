@@ -7,27 +7,11 @@ clone:
   disable: true
 
 steps:
-#  - name: clone
-#    pull: if-not-exists
-#    image: alpine/git
-#    volumes:
-#      - name: sshkeys
-#        path: /root/.ssh
-#    commands:
-#      - echo $publish_branch
-#      - echo $DRONE_GIT_SSH_URL
-#      - chmod -R 600 /root/.ssh/
-#      - ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
-#      - git clone -b $$DRONE_COMMIT_BRANCH --depth=1 $DRONE_GIT_SSH_URL
-#      - cd $warehouse_name
-#      - mv -f ./* /drone/src
-
-
   - name: clone
     pull: if-not-exists
     image: alpine/git
     commands:
-      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/nothatdinger/UniqueSSO.git .
+      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git .
 
   - name: build_publish
     image: plugins/docker
@@ -93,10 +77,7 @@ volumes:
       path: /root/service-dev/SSO/conf.yaml
   - name: config-prod
     host:
-      path: /root/service/SSO
-  - name: sshkeys
-    host:
-      path: /root/.ssh
+      path: /root/service-dev/SSO/conf.yaml
 
 trigger:
   branch:

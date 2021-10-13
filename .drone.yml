@@ -1,0 +1,106 @@
+kind: pipeline
+type: docker
+name: SSO
+
+
+clone:
+  disable: true
+
+steps:
+#  - name: clone
+#    pull: if-not-exists
+#    image: alpine/git
+#    volumes:
+#      - name: sshkeys
+#        path: /root/.ssh
+#    commands:
+#      - echo $publish_branch
+#      - echo $DRONE_GIT_SSH_URL
+#      - chmod -R 600 /root/.ssh/
+#      - ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+#      - git clone -b $$DRONE_COMMIT_BRANCH --depth=1 $DRONE_GIT_SSH_URL
+#      - cd $warehouse_name
+#      - mv -f ./* /drone/src
+
+
+  - name: clone
+    pull: if-not-exists
+    image: alpine/git
+    commands:
+      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/nothatdinger/UniqueSSO.git .
+
+  - name: build_publish
+    image: plugins/docker
+    depends_on:
+      - clone
+    settings:
+      username:
+        from_secret: docker_hub_username
+      password:
+        from_secret: docker_hub_password
+      auto_tag: true
+      registry: ccr.ccs.tencentyun.com
+      repo: ccr.ccs.tencentyun.com/unique-studio/SSO
+    volumes:
+      - name: sock
+        path: /var/run/docker.sock
+      - name: local
+        path: /var/lib/docker
+
+  - name: deploy_dev
+    image: tmaier/docker-compose
+    depends_on:
+      - build_publish
+    volumes:
+      - name: sock
+        path: /var/run/docker.sock
+      - name: config_dev
+        path: /drone/src/SSO/conf.yaml
+    commands:
+      - ls
+      - docker-compose up -d
+    when:
+      branch:
+        - dev
+      event:
+        - push
+  - name: deploy_prod
+    image: tmaier/docker-compose
+    depends_on:
+      - build_publish
+    volumes:
+      - name: sock
+        path: /var/run/docker.sock
+      - name: config-prod
+        path: /drone/src/SSO/conf.yaml
+    commands:
+      - ls
+      - docker-compose up -d
+    when:
+      event:
+        - tag
+
+volumes:
+  - name: sock
+    host:
+      path: /var/run/docker.sock
+  - name: local
+    host:
+      path: /var/lib/docker
+  - name: config_dev
+    #把宿主机的config挂载进docker
+    host:
+      path: /root/service-dev/SSO/conf.yaml
+  - name: config-prod
+    host:
+      path: /root/service/SSO
+  - name: sshkeys
+    host:
+      path: /root/.ssh
+
+trigger:
+  branch:
+    - dev
+  event:
+    - push
+    - tag

@@ -40,8 +40,8 @@ steps:
       - name: config_dev
         path: /drone/src/SSO/conf.yaml
     commands:
-      - ls
-      - docker-compose up -d uniquesso-back --rebuild
+      - 
+      - docker-compose up -d  --remove-orphans uniquesso-back
     when:
       branch:
         - dev

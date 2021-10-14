@@ -74,7 +74,7 @@ volumes:
       path: /root/service-dev/SSO/conf.yaml
   - name: config-prod
     host:
-      path: /root/service-dev/SSO/conf.yaml
+      path: /root/service/SSO/conf.yaml
 
 trigger:
   branch:

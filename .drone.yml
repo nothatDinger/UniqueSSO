@@ -6,11 +6,15 @@ clone:
   disable: true
 
 steps:
+#  - name: clone
+#    image: alpine/git
+#    commands:
+#      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git .
   - name: clone
-    pull: if-not-exists
     image: alpine/git
     commands:
-      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git .
+      - git config --global url."https://hub.fastgit.org".insteadOf https://github.com
+      - git clone -b $DRONE_COMMIT_BRANCH $DRONE_GIT_HTTP_URL .
 
   - name: build_publish
     image: plugins/docker

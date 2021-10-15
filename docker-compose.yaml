@@ -18,7 +18,7 @@ x-logging: &loki-logging
 
 services:
     uniquesso-back:
-        build: ./SSO
+#        build: ./SSO
         container_name: dev-sso-back
         volumes:
             - ./conf.yaml:/opt/uniquesso-backend/settings.yaml

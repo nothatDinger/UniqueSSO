@@ -23,7 +23,7 @@ steps:
         from_secret: docker_hub_password
       auto_tag: true
       registry: ccr.ccs.tencentyun.com
-      repo: ccr.ccs.tencentyun.com/unique-studio/SSO
+      repo: ccr.ccs.tencentyun.com/unique-studio/sso
     volumes:
       - name: sock
         path: /var/run/docker.sock

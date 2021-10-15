@@ -19,6 +19,7 @@ x-logging: &loki-logging
 services:
     uniquesso-back:
 #        build: ./SSO
+        image: ccr.ccs.tencentyun.com/unique-studio/sso
         container_name: dev-sso-back
         volumes:
             - ./conf.yaml:/opt/uniquesso-backend/settings.yaml

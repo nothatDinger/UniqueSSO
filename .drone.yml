@@ -25,7 +25,7 @@ steps:
         from_secret: docker_hub_username
       password:
         from_secret: docker_hub_password
-      auto_tag: true
+      tags: latest
       registry: ccr.ccs.tencentyun.com
       repo: ccr.ccs.tencentyun.com/unique-studio/sso
     volumes:

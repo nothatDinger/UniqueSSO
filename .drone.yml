@@ -26,9 +26,11 @@ steps:
       password:
         from_secret: docker_hub_password
       tags: latest
-      dockerfile: ./SSO/Dockerfile
+      #dockerfile: ./SSO/Dockerfile
       registry: ccr.ccs.tencentyun.com
       repo: ccr.ccs.tencentyun.com/unique-studio/sso
+    commands:
+      - cd SSO
     volumes:
       - name: config_dev
         path: /drone/src/SSO/settings.yaml

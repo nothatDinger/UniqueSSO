@@ -4,7 +4,7 @@ WORKDIR /app/
 
 COPY . .
 
-RUN go mod init && \
+RUN go mod init ./SSO && \
     go env -w GO111MODULE=on && \
     go env -w GOPROXY="https://goproxy.cn,direct" && \
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o main main.go

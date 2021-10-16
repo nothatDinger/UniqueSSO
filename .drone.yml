@@ -13,6 +13,7 @@ steps:
   - name: clone
     image: alpine/git
     commands:
+      - git init
       - git remote add origin  https://github.com/UniqueStudio/UniqueSSO.git
       - git config core.sparsecheckout true
       - echo "SSO" >> .git/info/sparse-checkout

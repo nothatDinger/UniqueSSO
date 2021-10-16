@@ -17,7 +17,7 @@ steps:
       - git remote add origin  https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git
       - git config core.sparsecheckout true
       - echo "SSO" >> .git/info/sparse-checkout
-      - git pull origin $DRONE_COMMIT_BRANCH .
+      - git pull origin $DRONE_COMMIT_BRANCH
 
   - name: build_publish
     image: plugins/docker

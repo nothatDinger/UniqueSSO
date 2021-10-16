@@ -14,7 +14,7 @@ steps:
     image: alpine/git
     commands:
       - git init
-      - git remote add origin  https://github.com/UniqueStudio/UniqueSSO.git
+      - git remote add origin  https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git
       - git config core.sparsecheckout true
       - echo "SSO" >> .git/info/sparse-checkout
       - git pull origin $DRONE_COMMIT_BRANCH

@@ -4,7 +4,7 @@ WORKDIR /app/
 
 COPY . .
 
-RUN go mod init && \
+RUN go mod init SSO && \
     go mod tidy && \
     go env -w GO111MODULE=on && \
     go env -w GOPROXY="https://goproxy.cn,direct" && \

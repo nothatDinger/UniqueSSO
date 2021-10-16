@@ -6,18 +6,18 @@ clone:
   disable: true
 
 steps:
-#  - name: clone
-#    image: alpine/git
-#    commands:
-#      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git .
   - name: clone
     image: alpine/git
     commands:
-      - git init
-      - git remote add origin  https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git
-      - git config core.sparsecheckout true
-      - echo "SSO" >> .git/info/sparse-checkout
-      - git pull origin $DRONE_COMMIT_BRANCH
+      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git .
+#  - name: clone
+#    image: alpine/git
+#    commands:
+#      - git init
+#      - git remote add origin  https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git
+#      - git config core.sparsecheckout true
+#      - echo "SSO" >> .git/info/sparse-checkout
+#      - git pull origin $DRONE_COMMIT_BRANCH
 
   - name: build_publish
     image: plugins/docker

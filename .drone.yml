@@ -17,7 +17,7 @@ steps:
       - git remote add origin  https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git
       - git config core.sparsecheckout true
       - echo "SSO" >> .git/info/sparse-checkout
-      - git pull origin $DRONE_COMMIT_BRANCH
+      - git pull origin $DRONE_COMMIT_BRANCH .
 
   - name: build_publish
     image: plugins/docker
@@ -29,7 +29,7 @@ steps:
       password:
         from_secret: docker_hub_password
       tags: latest
-      #dockerfile: ./SSO/Dockerfile
+      dockerfile: ./SSO/Dockerfile
       registry: ccr.ccs.tencentyun.com
       repo: ccr.ccs.tencentyun.com/unique-studio/sso
 
@@ -51,7 +51,6 @@ steps:
       - name: config_dev
         path: /drone/src/SSO/conf.yaml
     commands:
-      - cd SSO
       - docker-compose up ./docker-compose.yaml  -d  --remove-orphans  uniquesso-back
     when:
       branch:

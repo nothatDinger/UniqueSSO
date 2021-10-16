@@ -6,15 +6,15 @@ clone:
   disable: true
 
 steps:
-#  - name: clone
-#    image: alpine/git
-#    commands:
-#      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git .
   - name: clone
     image: alpine/git
     commands:
-      - git config --global url."https://hub.fastgit.org".insteadOf https://github.com
-      - git clone -b $DRONE_COMMIT_BRANCH $DRONE_GIT_HTTP_URL .
+      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git .
+#  - name: clone
+#    image: alpine/git
+#    commands:
+#      - git config --global url."https://hub.fastgit.org".insteadOf https://github.com
+#      - git clone -b $DRONE_COMMIT_BRANCH $DRONE_GIT_HTTP_URL .
 
   - name: build_publish
     image: plugins/docker
@@ -30,6 +30,8 @@ steps:
       registry: ccr.ccs.tencentyun.com
       repo: ccr.ccs.tencentyun.com/unique-studio/sso
     volumes:
+      - name: config_dev
+        path: /drone/src/SSO/settings.yaml
       - name: sock
         path: /var/run/docker.sock
       - name: local

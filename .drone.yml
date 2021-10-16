@@ -32,6 +32,8 @@ steps:
       dockerfile: ./SSO/Dockerfile
       registry: ccr.ccs.tencentyun.com
       repo: ccr.ccs.tencentyun.com/unique-studio/sso
+    commands:
+      - ls
 
     volumes:
       - name: config_dev

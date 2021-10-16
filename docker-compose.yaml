@@ -18,7 +18,7 @@ x-logging: &loki-logging
 
 services:
     uniquesso-back:
-#        build: ./SSO
+        build: ./SSO
         image: ccr.ccs.tencentyun.com/unique-studio/sso
         container_name: dev-sso-back
         volumes:
@@ -30,15 +30,15 @@ services:
             - db_network
         logging: *loki-logging
         
-#     uniquesso-front:
-#         build: ./dashboard
-#         env_file:
-#             - ./dashboard/.env
-#         volumes:
-#             - ./static/:/opt/uniquesso-dashboard/
-#         networks:
-#             - uniquesso
-#             - db_network
+     uniquesso-front:
+         build: ./dashboard
+         env_file:
+             - ./dashboard/.env
+         volumes:
+             - ./static/:/opt/uniquesso-dashboard/
+         networks:
+             - uniquesso
+             - db_network
 
 
 networks:

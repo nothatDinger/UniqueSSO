@@ -26,6 +26,7 @@ steps:
       password:
         from_secret: docker_hub_password
       tags: latest
+      dockerfile: ./SSO/Dockerfile
       registry: ccr.ccs.tencentyun.com
       repo: ccr.ccs.tencentyun.com/unique-studio/sso
     volumes:
@@ -44,6 +45,7 @@ steps:
       - name: config_dev
         path: /drone/src/SSO/conf.yaml
     commands:
+      - cd SSO
       - docker-compose up -d  --remove-orphans  uniquesso-back
     when:
       branch:
@@ -60,6 +62,7 @@ steps:
       - name: config-prod
         path: /drone/src/SSO/conf.yaml
     commands:
+      - cd SSO
       - docker-compose up -d  --remove-orphans  uniquesso-back
     when:
       event:

@@ -6,15 +6,17 @@ clone:
   disable: true
 
 steps:
-  - name: clone
-    image: alpine/git
-    commands:
-      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git .
 #  - name: clone
 #    image: alpine/git
 #    commands:
-#      - git config --global url."https://hub.fastgit.org".insteadOf https://github.com
-#      - git clone -b $DRONE_COMMIT_BRANCH $DRONE_GIT_HTTP_URL .
+#      - git clone -b $DRONE_COMMIT_BRANCH https://github.com.cnpmjs.org/UniqueStudio/UniqueSSO.git .
+  - name: clone
+    image: alpine/git
+    commands:
+      - git remote add origin  https://github.com/UniqueStudio/UniqueSSO.git
+      - git config core.sparsecheckout true
+      - echo "SSO" >> .git/info/sparse-checkout
+      - git pull origin $DRONE_COMMIT_BRANCH
 
   - name: build_publish
     image: plugins/docker
@@ -29,8 +31,7 @@ steps:
       #dockerfile: ./SSO/Dockerfile
       registry: ccr.ccs.tencentyun.com
       repo: ccr.ccs.tencentyun.com/unique-studio/sso
-    commands:
-      - cd SSO
+
     volumes:
       - name: config_dev
         path: /drone/src/SSO/settings.yaml
@@ -50,7 +51,7 @@ steps:
         path: /drone/src/SSO/conf.yaml
     commands:
       - cd SSO
-      - docker-compose up -d  --remove-orphans  uniquesso-back
+      - docker-compose up ./docker-compose.yaml  -d  --remove-orphans  uniquesso-back
     when:
       branch:
         - dev
